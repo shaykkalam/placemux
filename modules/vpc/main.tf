@@ -18,14 +18,27 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-# 3. Create a Public Subnet inside the network
+# 3. Create Public Subnet 1 (Zone A)
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr
+  availability_zone       = "ap-south-1a" # Explicitly force to Availability Zone A
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.env_name}-public-subnet"
+    Name = "${var.env_name}-public-subnet-1"
+  }
+}
+
+# NEW: Create Public Subnet 2 (Zone B) to satisfy Multi-AZ RDS requirement
+resource "aws_subnet" "public_2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, 2) # Automatically maps a safe, non-overlapping subnet IP range
+  availability_zone       = "ap-south-1b" # Force to a completely different Availability Zone (Zone B)
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.env_name}-public-subnet-2"
   }
 }
 
@@ -43,8 +56,14 @@ resource "aws_route_table" "rt" {
   }
 }
 
-# 5. Associate the route table with our subnet
+# 5. Associate the route table with Public Subnet 1
 resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.rt.id
+}
+
+# NEW: Associate the route table with Public Subnet 2
+resource "aws_route_table_association" "public_assoc_2" {
+  subnet_id      = aws_subnet.public_2.id
   route_table_id = aws_route_table.rt.id
 }

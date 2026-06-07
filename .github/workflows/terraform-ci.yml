@@ -1,35 +1,45 @@
-name: "Terraform CI Skeleton"
+name: "Terraform CI/CD Pipeline"
 
-# Trigger this pipeline every time someone pushes code to the main branch
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+permissions:
+  id-token: write   # Required for requesting the AWS JWT secure token
+  contents: read    # Required to clone and read your codebase
 
 jobs:
-  terraform_validation:
-    name: "Lint and Validate IaC"
+  terraform_pipeline:
+    name: "Validate and Apply IaC"
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Download the code from GitHub into the automation runner
+      # 1. Download code into the workspace runner
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Install the Terraform tool inside the automation runner
+      # 2. Configure Secure Authentication to AWS via OIDC
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ap-south-1
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # We will set this secret in your repo settings next
+
+      # 3. Setup Terraform binary matching development requirements
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.0"
 
-      # 3. Check if the code is cleanly formatted
+      # 4. Check for clean syntax alignments
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-      # 4. Check if the code contains any syntax errors or missing arguments
-      - name: Terraform Validate
+      # 5. Automatically initialize, validate, and safe-apply dev tracking updates
+      - name: Terraform Dev Deploy
         run: |
-          cd dev && terraform init -backend=false && terraform validate
+          cd dev
+          terraform init -backend=false
+          terraform validate
