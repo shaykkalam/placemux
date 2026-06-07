@@ -1,0 +1,35 @@
+name: "Terraform CI Skeleton"
+
+# Trigger this pipeline every time someone pushes code to the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform_validation:
+    name: "Lint and Validate IaC"
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Download the code from GitHub into the automation runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Install the Terraform tool inside the automation runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      # 3. Check if the code is cleanly formatted
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      # 4. Check if the code contains any syntax errors or missing arguments
+      - name: Terraform Validate
+        run: |
+          cd dev && terraform init -backend=false && terraform validate
