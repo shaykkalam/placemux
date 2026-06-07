@@ -34,7 +34,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "public_2" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(var.vpc_cidr, 8, 2) # Automatically maps a safe, non-overlapping subnet IP range
-  availability_zone       = "ap-south-1b" # Force to a completely different Availability Zone (Zone B)
+  availability_zone       = "ap-south-1b"                  # Force to a completely different Availability Zone (Zone B)
   map_public_ip_on_launch = true
 
   tags = {

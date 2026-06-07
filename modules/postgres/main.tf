@@ -37,23 +37,23 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 # 3. Provision the Managed PostgreSQL Instance (AWS RDS)
 resource "aws_db_instance" "postgres" {
-  identifier             = "${var.env_name}-postgres-db"
-  allocated_storage      = 20 # 20 GB storage (fits easily into AWS Free Tier)
-  max_allocated_storage  = 100 # Auto-scales up to 100GB if needed
-  engine                 = "postgres"
-  engine_version         = "15"
-  instance_class         = "db.t3.micro" # Lightweight, cost-effective instance
-  db_name                = "placemux_${var.env_name}"
-  
+  identifier            = "${var.env_name}-postgres-db"
+  allocated_storage     = 20  # 20 GB storage (fits easily into AWS Free Tier)
+  max_allocated_storage = 100 # Auto-scales up to 100GB if needed
+  engine                = "postgres"
+  engine_version        = "15"
+  instance_class        = "db.t3.micro" # Lightweight, cost-effective instance
+  db_name               = "placemux_${var.env_name}"
+
   # Credentials (In a production setup, these would pull from Secrets Manager)
-  username               = "placemux_admin"
-  password               = "SecurePassword123!" # We'll rotate this later
-  
+  username = "placemux_admin"
+  password = "SecurePassword123!" # We'll rotate this later
+
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
-  
-  skip_final_snapshot    = true # Prevents AWS from hanging when we want to destroy it later
-  publicly_accessible    = true # Enabled temporary access for backend migrations ease
+
+  skip_final_snapshot = true # Prevents AWS from hanging when we want to destroy it later
+  publicly_accessible = true # Enabled temporary access for backend migrations ease
 
   tags = {
     Environment = var.env_name
